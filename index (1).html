@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin - Image to Video Creator</title>
+<style>
+  :root{
+    --bg:#0f172a; --panel:#1e293b; --panel2:#273449; --line:#334155;
+    --text:#e2e8f0; --muted:#94a3b8; --accent:#6366f1; --accent2:#22c55e; --danger:#ef4444;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:"Segoe UI","Noto Sans Tamil","Nirmala UI",Arial,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+  header{background:var(--panel);border-bottom:1px solid var(--line);padding:16px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10}
+  header h1{font-size:20px}
+  header span{color:var(--muted);font-size:14px}
+  main{max-width:1100px;margin:0 auto;padding:28px 20px}
+  .dropzone{border:2px dashed var(--line);border-radius:14px;padding:40px 20px;text-align:center;background:var(--panel);cursor:pointer;transition:.2s}
+  .dropzone:hover,.dropzone.drag{border-color:var(--accent);background:var(--panel2)}
+  .dropzone p{color:var(--muted);margin-top:8px;font-size:14px}
+  .dropzone strong{font-size:18px}
+  .toolbar{display:flex;gap:12px;align-items:center;justify-content:space-between;margin:22px 0 10px;flex-wrap:wrap}
+  .toolbar h2{font-size:18px}
+  button{border:0;border-radius:8px;padding:10px 18px;font-size:14px;font-weight:600;cursor:pointer;color:#fff;background:var(--accent);transition:.15s}
+  button:hover{filter:brightness(1.1)}
+  button:disabled{opacity:.5;cursor:not-allowed}
+  button.green{background:var(--accent2)}
+  button.red{background:var(--danger)}
+  button.gray{background:#475569}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:20px;display:grid;grid-template-columns:1fr 1fr;gap:20px}
+  @media(max-width:800px){.card{grid-template-columns:1fr}}
+  .stage{background:#000;border-radius:10px;overflow:hidden}
+  .stage img{width:100%;max-height:320px;object-fit:contain;display:block;background:#000}
+  .typed{background:#0b1220;color:#fff;font-family:"Courier New",monospace;font-size:17px;padding:14px;min-height:80px;white-space:pre-wrap;word-break:break-word}
+  .typed .cursor{display:inline-block;width:9px;background:#fff;margin-left:2px;animation:blink .7s steps(1) infinite}
+  @keyframes blink{50%{opacity:0}}
+  label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
+  textarea{width:100%;min-height:110px;background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:10px;font-size:15px;resize:vertical;font-family:inherit}
+  textarea:focus{outline:2px solid var(--accent)}
+  .actions{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap}
+  .status{font-size:13px;color:var(--muted);margin-top:10px;min-height:18px}
+  .result{margin-top:14px}
+  .result video{width:100%;border-radius:10px;background:#000}
+  .result a{display:inline-block;margin-top:8px;color:var(--accent2);font-size:14px}
+  .combine{background:linear-gradient(135deg,#312e81,#1e293b);border:1px solid var(--accent);border-radius:14px;padding:20px;margin-bottom:24px}
+  .combine h2{font-size:18px;margin-bottom:4px}
+  .combine p{color:var(--muted);font-size:13px;margin-bottom:14px}
+  .combine .row{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end}
+  .combine select{background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:10px;font-size:14px;min-width:190px}
+  .dl-list{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+  .dl-list a{background:var(--accent2);color:#fff;text-decoration:none;padding:9px 16px;border-radius:8px;font-weight:600;font-size:14px}
+  .empty{text-align:center;color:var(--muted);padding:30px}
+  .fname{font-size:13px;color:var(--muted);margin-bottom:10px}
+  .stage canvas{width:100%;display:block;background:#000}
+  .settings{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin:18px 0 6px;display:flex;gap:22px;flex-wrap:wrap;align-items:flex-end}
+  .settings select,.settings input[type=number]{background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:10px;font-size:14px;min-width:170px}
+  .settings input[type=number]{min-width:90px;width:90px}
+  .switch{display:flex;align-items:center;gap:10px;font-size:14px;color:var(--text);margin:0;cursor:pointer;padding-bottom:10px}
+  .switch input{appearance:none;-webkit-appearance:none;width:46px;height:26px;border-radius:26px;background:#475569;position:relative;cursor:pointer;transition:.2s;flex:none}
+  .switch input::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:.2s}
+  .switch input:checked{background:var(--accent2)}
+  .switch input:checked::after{left:23px}
+  .opts{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;margin-bottom:12px;padding:12px;background:var(--panel2);border-radius:10px}
+  .opts>div{display:flex;flex-direction:column;min-width:140px;flex:1}
+  .opts select{background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:8px;font-size:14px}
+  .opts .switch{padding-bottom:6px;flex:none}
+  input[type=color]{width:100%;min-width:60px;height:38px;border:1px solid var(--line);border-radius:8px;background:var(--bg);padding:2px;cursor:pointer}
+  .opts input[type=number]{background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:8px;font-size:14px;width:100%}
+  .card.textoff textarea,.card.textoff .fontopts{opacity:.4}
+  .card.textoff .fontopts{pointer-events:none}
+</style>
+</head>
+<body>
+<header>
+  <h1>🎬 Admin Panel – Image to Video</h1>
+  <span id="count">0 images</span>
+</header>
+
+<main>
+  <div id="fmtNote" style="margin-bottom:14px;font-size:13px;color:#94a3b8"></div>
+  <div class="dropzone" id="drop">
+    <strong>📁 Upload Images</strong>
+    <p>Click here or drag &amp; drop images (you can select many)</p>
+    <input type="file" id="file" accept="image/*" multiple hidden>
+  </div>
+
+  <div class="settings">
+    <label class="switch"><input type="checkbox" id="showText" checked> Show text on all images</label>
+    <div id="styleWrap">
+      <label>Text animation style</label>
+      <select id="textStyle">
+        <option value="typewriter">⌨ Typewriter (with sound)</option>
+        <option value="fade">✨ Fade in – word by word</option>
+        <option value="slideup">⬆ Slide up – word by word</option>
+        <option value="pop">💥 Pop / Zoom bounce</option>
+        <option value="neon">🌈 Neon glow typing</option>
+        <option value="karaoke">🎤 Karaoke highlight</option>
+      </select>
+    </div>
+    <div><label>Font (all images)</label><select id="allFont"></select></div>
+    <div><label>Text animation speed (all images)</label><select id="allSpeed"></select></div>
+    <div><label>Font size in px (all images, 0 = auto)</label><input type="number" id="allSize" value="0" min="0" max="200" step="1" placeholder="Auto"></div>
+    <div><label>Text alignment (all images)</label><select id="allAlign"></select></div>
+    <div><label>Text color (all images)</label><input type="color" id="allColor" value="#ffffff"></div>
+    <div id="holdWrap">
+      <label>Wait after text (sec)</label>
+      <input type="number" id="holdSec" value="5" min="0" max="30" step="1">
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <h2>Uploaded Images</h2>
+    <div style="display:flex;gap:10px">
+      <button class="green" id="createAll">🎥 Create All Videos</button>
+      <button class="red" id="clearAll">Clear All</button>
+    </div>
+  </div>
+
+  <div class="combine">
+    <h2>🎞 Combine All Images into One Video</h2>
+    <p>Every image (animated text, then the wait time) is joined into a single video with transition effects.</p>
+    <div class="row">
+      <div>
+        <label>Transition effect</label>
+        <select id="cTrans">
+          <option value="mix">Mix (different each time)</option>
+          <option value="fade">Fade</option>
+          <option value="slideleft">Slide Left</option>
+          <option value="slideup">Slide Up</option>
+          <option value="zoom">Zoom</option>
+          <option value="wipe">Wipe</option>
+        </select>
+      </div>
+      <div>
+        <label>Video quality</label>
+        <select id="cQuality">
+          <option value="480">480p – Small file</option>
+          <option value="720" selected>720p – HD</option>
+          <option value="1080">1080p – Full HD</option>
+        </select>
+      </div>
+      <button class="green" id="createCombined">🎬 Create Combined Video</button>
+    </div>
+    <div class="status" id="cStatus"></div>
+    <div class="result" id="cResult"></div>
+  </div>
+
+  <div id="list"><div class="empty">No images yet. Upload some images to start.</div></div>
+</main>
+
+<script>
+const W = 1280, H = 720, DURATION = 5000; // each video = 5 seconds
+const IMG_H = 500;                          // image area height in video
+const items = [];
+let uid = 0;
+
+const $ = s => document.querySelector(s);
+const list = $('#list'), fileInput = $('#file'), drop = $('#drop');
+
+/* ---------- Fonts (Tamil + English), speed, grapheme helper ---------- */
+const FONT_DEFS = {
+  auto:{label:'🎯 Auto (match animation style)'},
+  notosans:{label:'Noto Sans Tamil – clean · நவீனம்',fam:'Noto Sans Tamil',w:700,gf:'Noto+Sans+Tamil:wght@700'},
+  notoserif:{label:'Noto Serif Tamil – elegant · அழகு',fam:'Noto Serif Tamil',w:700,gf:'Noto+Serif+Tamil:wght@700'},
+  hind:{label:'Hind Madurai – bold & clear',fam:'Hind Madurai',w:700,gf:'Hind+Madurai:wght@700'},
+  mukta:{label:'Mukta Malar – smooth',fam:'Mukta Malar',w:700,gf:'Mukta+Malar:wght@700'},
+  catamaran:{label:'Catamaran – modern',fam:'Catamaran',w:700,gf:'Catamaran:wght@700'},
+  baloo:{label:'Baloo Thambi 2 – playful 🎈',fam:'Baloo Thambi 2',w:700,gf:'Baloo+Thambi+2:wght@700'},
+  anek:{label:'Anek Tamil – stylish',fam:'Anek Tamil',w:700,gf:'Anek+Tamil:wght@700'},
+  kavi:{label:'Kavivanar – handwriting ✍',fam:'Kavivanar',w:400,gf:'Kavivanar'},
+  poppins:{label:'Poppins – English modern',fam:'Poppins',w:700,gf:'Poppins:wght@700'},
+  playfair:{label:'Playfair Display – English classic',fam:'Playfair Display',w:700,gf:'Playfair+Display:wght@700'},
+  pacifico:{label:'Pacifico – English script',fam:'Pacifico',w:400,gf:'Pacifico'},
+  lobster:{label:'Lobster – English bold script',fam:'Lobster',w:400,gf:'Lobster'},
+  bebas:{label:'Bebas Neue – English poster',fam:'Bebas Neue',w:400,gf:'Bebas+Neue'}
+};
+Object.values(FONT_DEFS).forEach(d => { if(!d.fam) return;
+  d.stack = `"${d.fam}","Noto Sans Tamil","Nirmala UI",Latha,sans-serif`;
+  const l = document.createElement('link'); l.rel='stylesheet'; l.href='https://fonts.googleapis.com/css2?family='+d.gf+'&display=swap'; document.head.appendChild(l);
+});
+const SPEEDS = [[0.4,'🐢 Very slow'],[0.7,'🚶 Slow'],[1,'⚡ Normal'],[1.6,'🏃 Fast'],[2.5,'🚀 Very fast']];
+const DEF = {show:true, font:'auto', speed:1, size:0, color:'#ffffff', align:'left'};
+const ALIGNS = [['left','⬅ Left'],['center','↔ Center'],['right','➡ Right'],['justify','☰ Justify']];
+const alignOptions = () => ALIGNS.map(([v,l]) => `<option value="${v}">${l}</option>`).join('');
+const parseSize = v => { const n = Math.round(Number(v)); return (n > 0) ? Math.min(200, Math.max(8, n)) : 0; };
+const fontOptions = () => Object.entries(FONT_DEFS).map(([k,d]) => `<option value="${k}">${d.label}</option>`).join('');
+const speedOptions = () => SPEEDS.map(([v,l]) => `<option value="${v}"${v===1?' selected':''}>${l}</option>`).join('');
+let fontEpoch = 0; const fontCache = {};
+function loadOne(k){
+  const d = FONT_DEFS[k]; if(!d || !d.fam) return Promise.resolve();
+  if(!fontCache[k]){
+    const f = `${d.w} 40px "${d.fam}"`;
+    fontCache[k] = Promise.race([Promise.all([document.fonts.load(f,'அஆஇ'), document.fonts.load(f,'Aa')]), new Promise(r => setTimeout(r,5000))]).catch(()=>{}).then(() => { fontEpoch++; });
+  }
+  return fontCache[k];
+}
+const loadFont = k => Promise.all([loadOne(k), loadOne('notosans')]);
+const SEG = (window.Intl && Intl.Segmenter) ? new Intl.Segmenter(undefined,{granularity:'grapheme'}) : null;
+const gr = t => SEG ? Array.from(SEG.segment(t), x => x.segment) : Array.from(t);
+
+/* ---------- Upload ---------- */
+drop.onclick = () => fileInput.click();
+fileInput.onchange = e => addFiles(e.target.files);
+['dragover','dragenter'].forEach(ev => drop.addEventListener(ev, e => {e.preventDefault();drop.classList.add('drag')}));
+['dragleave','drop'].forEach(ev => drop.addEventListener(ev, e => {e.preventDefault();drop.classList.remove('drag')}));
+drop.addEventListener('drop', e => addFiles(e.dataTransfer.files));
+
+function addFiles(files){
+  [...files].filter(f => f.type.startsWith('image/')).forEach(f => {
+    const item = {id:++uid, file:f, url:URL.createObjectURL(f), text:'', img:new Image(), timer:null, busy:false, bg:null, show:DEF.show, font:DEF.font, speed:DEF.speed, size:DEF.size, color:DEF.color, align:DEF.align};
+    item.img.src = item.url;
+    item.ready = loadBackground(item);
+    items.push(item);
+  });
+  fileInput.value = '';
+  render();
+}
+
+/* ---------- Robust image loading: pre-render the image (cover) into a canvas ---------- */
+async function loadBackground(it){
+  let src = null, sw = 0, sh = 0;
+  try{
+    const bmp = await createImageBitmap(it.file);
+    src = bmp; sw = bmp.width; sh = bmp.height;
+  }catch(e){
+    try{
+      await it.img.decode();
+      src = it.img; sw = it.img.naturalWidth; sh = it.img.naturalHeight;
+    }catch(e2){ src = null; }
+  }
+  if(!src || !sw || !sh){ it.bg = null; return false; }
+  const c = document.createElement('canvas'); c.width = W; c.height = H;
+  const x = c.getContext('2d');
+  const r = Math.max(W/sw, H/sh), iw = sw*r, ih = sh*r;
+  x.fillStyle = '#000'; x.fillRect(0,0,W,H);
+  x.drawImage(src, (W-iw)/2, (H-ih)/2, iw, ih);
+  it.bg = c;
+  return true;
+}
+async function ensureImages(list, setStatus){
+  const res = await Promise.all(list.map(i => i.ready));
+  const bad = list.findIndex((_, k) => !res[k]);
+  if(bad >= 0){ setStatus(`⚠ Image #${bad+1} (${list[bad].file.name}) could not be loaded. Use a JPG/PNG/WebP image.`); return false; }
+  return true;
+}
+
+/* ---------- Pick best recording format (MP4 first) ---------- */
+function pickFormat(){
+  const opts = [
+    ['video/mp4;codecs=avc1.42E01E,mp4a.40.2','mp4'],
+    ['video/mp4;codecs=avc1.4D401F,mp4a.40.2','mp4'],
+    ['video/mp4;codecs=avc1,mp4a.40.2','mp4'],
+    ['video/mp4','mp4'],
+    ['video/webm;codecs=vp9,opus','webm'],
+    ['video/webm;codecs=vp8,opus','webm'],
+    ['video/webm','webm']
+  ];
+  const f = opts.find(o => window.MediaRecorder && MediaRecorder.isTypeSupported(o[0]));
+  return f ? {mime:f[0], ext:f[1]} : {mime:'', ext:'webm'};
+}
+const FMT = pickFormat();
+document.addEventListener('DOMContentLoaded', () => {
+  const n = document.getElementById('fmtNote');
+  n.textContent = FMT.ext === 'mp4'
+    ? '✅ Videos will be saved as MP4.'
+    : '⚠ This browser cannot record MP4 directly, so videos will be WebM. Open this page in the latest Google Chrome (or Edge/Safari) to get MP4.';
+});
+
+/* ---------- Settings ---------- */
+const WD = 450; // animation time of one word (ms)
+const curStyle = () => $('#textStyle').value;
+const HOLD     = () => Math.max(0, Math.min(30, Number($('#holdSec').value) || 0)) * 1000;
+const textOn   = it => it.show && it.text.trim().length > 0;
+function onSettings(){ items.forEach(drawStatic); }
+['textStyle','holdSec'].forEach(id => { $('#'+id).addEventListener('change', onSettings); $('#'+id).addEventListener('input', onSettings); });
+$('#allFont').innerHTML = fontOptions(); $('#allSpeed').innerHTML = speedOptions();
+$('#showText').addEventListener('change', () => { DEF.show = $('#showText').checked; items.forEach(it => { it.show = DEF.show; refreshCard(it); drawStatic(it); }); });
+$('#allFont').addEventListener('change', async () => { DEF.font = $('#allFont').value; items.forEach(it => { it.font = DEF.font; refreshCard(it); }); await loadFont(DEF.font); items.forEach(drawStatic); });
+$('#allAlign').innerHTML = alignOptions(); $('#allAlign').value = DEF.align;
+$('#allSize').addEventListener('input', () => { DEF.size = parseSize($('#allSize').value); items.forEach(it => { it.size = DEF.size; refreshCard(it); drawStatic(it); }); });
+$('#allAlign').addEventListener('change', () => { DEF.align = $('#allAlign').value; items.forEach(it => { it.align = DEF.align; refreshCard(it); drawStatic(it); }); });
+$('#allColor').addEventListener('input', () => { DEF.color = $('#allColor').value; items.forEach(it => { it.color = DEF.color; refreshCard(it); drawStatic(it); }); });
+$('#allSpeed').addEventListener('change', () => { DEF.speed = Number($('#allSpeed').value); items.forEach(it => { it.speed = DEF.speed; refreshCard(it); }); if(items[0]) preview(items[0]); });
+function syncGlobalToggle(){ if(items.length) $('#showText').checked = items.every(i => i.show); }
+function refreshCard(it, card){
+  const c = card || document.getElementById('card'+it.id); if(!c) return;
+  c.querySelector('.cshow').checked = it.show; c.querySelector('.cfont').value = it.font;
+  c.querySelector('.cspeed').value = String(it.speed); c.querySelector('.csize').value = it.size ? String(it.size) : ''; c.querySelector('.calign').value = it.align; c.querySelector('.ccolor').value = it.color; c.classList.toggle('textoff', !it.show);
+}
+
+/* ---------- Render list ---------- */
+function render(){
+  $('#count').textContent = items.length + ' image' + (items.length===1?'':'s');
+  if(!items.length){ list.innerHTML = '<div class="empty">No images yet. Upload some images to start.</div>'; return; }
+  list.innerHTML = '';
+  items.forEach((it, i) => {
+    const card = document.createElement('div');
+    card.className = 'card'; card.id = 'card'+it.id;
+    card.innerHTML = `
+      <div>
+        <div class="fname">#${i+1} · ${esc(it.file.name)}</div>
+        <div class="stage"><canvas id="prev${it.id}" width="${W}" height="${H}"></canvas></div>
+      </div>
+      <div>
+        <div class="opts">
+          <label class="switch"><input type="checkbox" class="cshow"> Show text</label>
+          <div class="fontopts"><label>Font</label><select class="cfont">${fontOptions()}</select></div>
+          <div class="fontopts"><label>Animation speed</label><select class="cspeed">${speedOptions()}</select></div>
+          <div class="fontopts"><label>Font size (px, empty = auto)</label><input type="number" class="csize" min="8" max="200" step="1" placeholder="Auto"></div>
+          <div class="fontopts"><label>Alignment</label><select class="calign">${alignOptions()}</select></div>
+          <div class="fontopts"><label>Text color</label><input type="color" class="ccolor"></div>
+        </div>
+        <label>Text for this image (தமிழ் / English – animated on the video)</label>
+        <textarea id="text${it.id}" placeholder="Type your text here... / உங்கள் உரையை இங்கே தட்டச்சு செய்யவும்...">${esc(it.text)}</textarea>
+        <div class="actions">
+          <button class="gray" data-a="preview">▶ Preview Animation</button>
+          <button class="green" data-a="video">🎥 Create Video</button>
+          <button class="red" data-a="remove">Remove</button>
+        </div>
+        <div class="status" id="status${it.id}"></div>
+        <div class="result" id="result${it.id}"></div>
+      </div>`;
+    const sh = card.querySelector('.cshow'), fs = card.querySelector('.cfont'), ss = card.querySelector('.cspeed');
+    refreshCard(it, card);
+    sh.onchange = () => { it.show = sh.checked; refreshCard(it, card); syncGlobalToggle(); drawStatic(it); };
+    fs.onchange = async () => { it.font = fs.value; await loadFont(it.font); preview(it); };
+    ss.onchange = () => { it.speed = Number(ss.value); preview(it); };
+    const zs = card.querySelector('.csize'), cc = card.querySelector('.ccolor');
+    zs.oninput = () => { it.size = parseSize(zs.value); drawStatic(it); };
+    const as = card.querySelector('.calign');
+    as.onchange = () => { it.align = as.value; drawStatic(it); };
+    cc.oninput = () => { it.color = cc.value; drawStatic(it); };
+    const ta = card.querySelector('textarea');
+    ta.oninput = () => { it.text = ta.value; clearTimeout(it.deb); it.deb = setTimeout(()=>preview(it), 600); };
+    card.querySelector('[data-a=preview]').onclick = () => preview(it);
+    card.querySelector('[data-a=video]').onclick = () => createVideo(it);
+    card.querySelector('[data-a=remove]').onclick = () => { items.splice(items.indexOf(it),1); cancelAnimationFrame(it.pv); render(); };
+    list.appendChild(card);
+    Promise.all([it.ready, loadFont(it.font)]).then(() => drawStatic(it));
+  });
+}
+function esc(s){return s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+
+/* ---------- Text layout (cached) ---------- */
+const MC = document.createElement('canvas').getContext('2d');
+const FONTS = {typewriter:'"Courier New", monospace', fade:'Georgia, serif', slideup:'"Segoe UI", Arial, sans-serif', pop:'Impact, "Arial Black", sans-serif', neon:'"Arial Black", Arial, sans-serif', karaoke:'"Segoe UI", Arial, sans-serif'};
+function fontFor(it, style, size){
+  const d = FONT_DEFS[it.font];
+  if(d && d.fam) return `${d.w} ${size}px ${d.stack}`;
+  return `${style==='fade'?'italic bold':'bold'} ${size}px ${FONTS[style]}, "Noto Sans Tamil", "Nirmala UI", Latha, sans-serif`;
+}
+function wrap(ctx, text, maxW){
+  const lines = [];
+  text.split('\n').forEach(par => {
+    let line = '';
+    par.split(' ').forEach(word => {
+      const test = line ? line+' '+word : word;
+      if(ctx.measureText(test).width > maxW && line){ lines.push({t:line, last:false}); line = word; }
+      else line = test;
+    });
+    lines.push({t:line, last:true});
+  });
+  return lines;
+}
+function getLayout(it, style){
+  const align = it.align || 'left';
+  const key = style+'|'+it.font+'|'+fontEpoch+'|'+it.size+'|'+align+'|'+it.text;
+  if(it._lk === key) return it._lay;
+  const pad = 50, maxW = W-pad*2, panelH = 230;
+  let size, lines;
+  if(it.size){                       // exact pixel size chosen by the user
+    size = it.size; MC.font = fontFor(it,style,size); lines = wrap(MC, it.text, maxW);
+  } else {                           // auto: shrink until the text fits
+    for(size = 44; size>=16; size-=2){
+      MC.font = fontFor(it,style,size); lines = wrap(MC, it.text, maxW);
+      if(lines.length*size*1.4 <= panelH) break;
+    }
+    size = Math.max(size,16);
+  }
+  MC.font = fontFor(it,style,size);
+  const lh = size*1.4, y0 = Math.max(8, H - 14 - ((lines.length-1)*lh + size*1.2));
+  const words = []; let cs = 0, wi = 0;
+  const spaceW = MC.measureText(' ').width;
+  lines.forEach((L, li) => {
+    const line = L.t, parts = line.split(' ');
+    const real = parts.filter(p => p !== '');
+    const lw = MC.measureText(line).width;
+    const sumW = real.reduce((a,p) => a + MC.measureText(p).width, 0);
+    const just = align === 'justify' && !L.last && real.length > 1;
+    let off = 0, gap = spaceW;
+    if(align === 'center') off = (maxW - lw)/2;
+    else if(align === 'right') off = maxW - lw;
+    else if(just) gap = (maxW - sumW)/(real.length - 1);
+    let cx = pad + off;
+    parts.forEach((pt, k) => {
+      const prefix = parts.slice(0,k).join(' ') + (k ? ' ' : '');
+      if(pt === ''){ cx += gap; return; }
+      const w = MC.measureText(pt).width;
+      const x = just ? cx : pad + off + MC.measureText(prefix).width;
+      words.push({t:pt, g:gr(pt), x, y:y0 + li*lh, w, idx:wi++, cs:cs+gr(prefix).length});
+      cx += w + gap;
+    });
+    cs += gr(line).length + 1;
+  });
+  it._lk = key; it._lay = {size, lh, y0, words, n:gr(it.text).length};
+  return it._lay;
+}
+function timing(it){
+  const style = curStyle(), show = textOn(it), sp = it.speed || 1;
+  const key = [style,show,HOLD(),sp,it.font,fontEpoch,it.size,it.text].join('|');
+  if(it._tk === key) return it._tm;
+  let tm;
+  if(!show){ tm = {animEnd:0, dur:DURATION, step:0, wordStep:0, wd:WD}; }
+  else {
+    const lay = getLayout(it, style), n = lay.n, nW = Math.max(1, lay.words.length);
+    const step = Math.min(4000/Math.max(n,1), 70) / sp;
+    const wd = Math.max(120, WD/sp);
+    const wordStep = Math.min(350, Math.max(60, (4000-WD)/Math.max(nW-1,1))) / sp;
+    const charBased = style==='typewriter' || style==='neon';
+    const animEnd = charBased ? n*step : (nW-1)*wordStep + wd;
+    tm = {animEnd, dur:Math.max(2000, animEnd + HOLD()), step, wordStep, wd};
+  }
+  it._tk = key; it._tm = tm;
+  return tm;
+}
+const durOf = it => timing(it).dur;
+
+/* ---------- Canvas drawing ---------- */
+const easeOutCubic = p => 1 - Math.pow(1-p, 3);
+const easeOutBack  = p => { const c1 = 1.70158, c3 = c1+1; return 1 + c3*Math.pow(p-1,3) + c1*Math.pow(p-1,2); };
+const clamp01 = p => Math.max(0, Math.min(1, p));
+
+function drawChars(ctx, lay, shown){
+  let lastX = lay.words.length ? lay.words[0].x : 50, lastY = lay.words.length ? lay.words[0].y : lay.y0;
+  for(const w of lay.words){
+    const k = Math.max(0, Math.min(w.g.length, shown - w.cs));
+    if(k <= 0) continue;
+    const part = w.g.slice(0,k).join('');
+    ctx.fillText(part, w.x, w.y);
+    lastX = w.x + ctx.measureText(part).width; lastY = w.y;
+  }
+  return {x:lastX, y:lastY};
+}
+
+function drawFrame(ctx, it, t){
+  ctx.globalAlpha = 1; ctx.shadowBlur = 0; ctx.shadowColor = 'transparent';
+  ctx.fillStyle = '#000'; ctx.fillRect(0,0,W,H);
+  if(it.bg) ctx.drawImage(it.bg, 0, 0, W, H);
+  if(!textOn(it)) return;
+  t = Math.max(0, t);
+
+  const style = curStyle(), lay = getLayout(it, style), tm = timing(it);
+  const gy = Math.max(0, Math.min(H*0.45, lay.y0 - 60));
+  const grad = ctx.createLinearGradient(0, gy, 0, H);
+  grad.addColorStop(0, 'rgba(0,0,0,0)'); grad.addColorStop(1, 'rgba(0,0,0,0.85)');
+  ctx.fillStyle = grad; ctx.fillRect(0, gy, W, H-gy);
+  ctx.font = fontFor(it, style, lay.size); ctx.textBaseline = 'top';
+  ctx.shadowColor = 'rgba(0,0,0,0.9)'; ctx.shadowBlur = 6;
+  const col = it.color || '#ffffff', isW = col.toLowerCase() === '#ffffff';
+  ctx.fillStyle = col;
+
+  if(style === 'typewriter'){
+    const shown = Math.min(lay.n, Math.floor(t/tm.step));
+    const pos = drawChars(ctx, lay, shown);
+    if(Math.floor(t/350)%2 === 0) ctx.fillRect(pos.x+3, pos.y, lay.size*0.5, lay.size);
+  }
+  else if(style === 'neon'){
+    const shown = Math.min(lay.n, Math.floor(t/tm.step));
+    const pulse = 14 + 8*Math.sin(t/200);
+    ctx.fillStyle = isW ? '#f0f9ff' : col;
+    ctx.shadowColor = '#22d3ee'; ctx.shadowBlur = pulse + 10; drawChars(ctx, lay, shown);
+    ctx.shadowColor = '#e879f9'; ctx.shadowBlur = pulse;      drawChars(ctx, lay, shown);
+  }
+  else {
+    for(const w of lay.words){
+      const p = clamp01((t - w.idx*tm.wordStep)/tm.wd);
+      if(style === 'fade'){
+        if(p <= 0) continue;
+        ctx.globalAlpha = p; ctx.fillText(w.t, w.x, w.y);
+      } else if(style === 'slideup'){
+        if(p <= 0) continue;
+        ctx.globalAlpha = p; ctx.fillText(w.t, w.x, w.y + (1-easeOutCubic(p))*36);
+      } else if(style === 'pop'){
+        if(p <= 0) continue;
+        const sc = Math.max(0.01, easeOutBack(p));
+        ctx.save(); ctx.globalAlpha = Math.min(1, p*2.5);
+        ctx.translate(w.x + w.w/2, w.y + lay.size/2); ctx.scale(sc, sc);
+        ctx.fillText(w.t, -w.w/2, -lay.size/2); ctx.restore();
+      } else if(style === 'karaoke'){
+        const active = p > 0;
+        ctx.fillStyle = active ? (isW ? '#facc15' : col) : 'rgba(255,255,255,0.4)';
+        if(active && p < 1){
+          const sc = 1 + 0.18*Math.sin(Math.PI*p);
+          ctx.save(); ctx.translate(w.x + w.w/2, w.y + lay.size/2); ctx.scale(sc, sc);
+          ctx.fillText(w.t, -w.w/2, -lay.size/2); ctx.restore();
+        } else ctx.fillText(w.t, w.x, w.y);
+      }
+      ctx.globalAlpha = 1;
+    }
+  }
+  ctx.globalAlpha = 1; ctx.shadowBlur = 0; ctx.shadowColor = 'transparent';
+}
+
+/* ---------- On-page preview (same drawing as the video) ---------- */
+function drawStatic(it){
+  const cv = document.getElementById('prev'+it.id); if(!cv) return;
+  cancelAnimationFrame(it.pv);
+  drawFrame(cv.getContext('2d'), it, timing(it).animEnd);
+}
+function preview(it){
+  const cv = document.getElementById('prev'+it.id); if(!cv) return;
+  cancelAnimationFrame(it.pv);
+  const ctx = cv.getContext('2d'), t0 = performance.now(), end = timing(it).animEnd + 400;
+  (function loop(){
+    const t = performance.now() - t0;
+    drawFrame(ctx, it, Math.min(t, end));
+    if(t < end) it.pv = requestAnimationFrame(loop);
+  })();
+}
+
+/* ---------- Sound ---------- */
+function click(ac, dest, when, big){
+  const len = Math.floor(ac.sampleRate*0.03);
+  const buf = ac.createBuffer(1, len, ac.sampleRate), d = buf.getChannelData(0);
+  for(let i=0;i<len;i++) d[i] = (Math.random()*2-1) * Math.exp(-i/(len*0.15));
+  const src = ac.createBufferSource(); src.buffer = buf;
+  const f = ac.createBiquadFilter(); f.type='bandpass'; f.frequency.value = big?1200:2500; f.Q.value = 1.2;
+  const g = ac.createGain(); g.gain.value = big?1.2:0.8;
+  src.connect(f); f.connect(g); g.connect(dest); src.start(when);
+}
+function ding(ac, dest, when){
+  const o = ac.createOscillator(), g = ac.createGain();
+  o.type='sine'; o.frequency.value = 1800;
+  g.gain.setValueAtTime(0.3, when); g.gain.exponentialRampToValueAtTime(0.001, when+0.6);
+  o.connect(g); g.connect(dest); o.start(when); o.stop(when+0.7);
+}
+function scheduleSound(ac, dest, base, it){
+  if(!textOn(it)) return;
+  const style = curStyle(), tm = timing(it), text = it.text, G = gr(text);
+  if(style === 'typewriter' || style === 'neon'){
+    for(let k=0;k<G.length;k++){
+      if(G[k] === ' ') continue;
+      click(ac, dest, base + k*tm.step/1000, G[k] === '\n');
+    }
+    if(style === 'typewriter') ding(ac, dest, base + tm.animEnd/1000 + 0.1);
+  } else {
+    getLayout(it, style).words.forEach(w => click(ac, dest, base + w.idx*tm.wordStep/1000, false));
+  }
+}
+
+/* ---------- Create video (animation + wait time) ---------- */
+async function createVideo(it){
+  const status = document.getElementById('status'+it.id);
+  if(it.busy) return;
+  it.busy = true;
+  await loadFont(it.font);
+  const card = document.getElementById('card'+it.id);
+  const btn = card.querySelector('[data-a=video]'); btn.disabled = true;
+  if(!(await ensureImages([it], m => status.textContent = m))){ btn.disabled = false; it.busy = false; return; }
+  cancelAnimationFrame(it.pv);
+
+  const total = durOf(it);
+  const canvas = document.createElement('canvas'); canvas.width = W; canvas.height = H;
+  const ctx = canvas.getContext('2d');
+  const AC = window.AudioContext || window.webkitAudioContext;
+  const ac = new AC(); await ac.resume();
+  const dest = ac.createMediaStreamDestination();
+
+  const stream = new MediaStream([...canvas.captureStream(30).getVideoTracks(), ...dest.stream.getAudioTracks()]);
+  const rec = new MediaRecorder(stream, FMT.mime ? {mimeType:FMT.mime, videoBitsPerSecond:4000000} : {videoBitsPerSecond:4000000});
+  const chunks = [];
+  rec.ondataavailable = e => e.data.size && chunks.push(e.data);
+
+  scheduleSound(ac, dest, ac.currentTime + 0.15, it);
+
+  drawFrame(ctx, it, 0);
+  rec.start();
+  const t0 = performance.now();
+  await new Promise(resolve => {
+    (function loop(){
+      const t = performance.now() - t0;
+      drawFrame(ctx, it, Math.min(t,total));
+      status.textContent = `🎬 Recording… ${(Math.min(t,total)/1000).toFixed(1)}s / ${(total/1000).toFixed(1)}s`;
+      if(t < total) requestAnimationFrame(loop); else resolve();
+    })();
+  });
+  await new Promise(r => { rec.onstop = r; rec.stop(); });
+  ac.close();
+
+  const blob = new Blob(chunks, {type: FMT.ext==='mp4' ? 'video/mp4' : 'video/webm'});
+  const url = URL.createObjectURL(blob);
+  document.getElementById('result'+it.id).innerHTML =
+    `<video src="${url}" controls></video><br><a href="${url}" download="video-${it.id}.${FMT.ext}">⬇ Download Video (.${FMT.ext})</a>`;
+  status.textContent = `✅ Video created (${(total/1000).toFixed(1)} seconds).`;
+  btn.disabled = false; it.busy = false;
+  drawStatic(it);
+}
+
+/* ---------- Combined video with transitions ---------- */
+const QUALITY = {
+  '480': {w:854,  h:480,  bps:1500000},
+  '720': {w:1280, h:720,  bps:4000000},
+  '1080':{w:1920, h:1080, bps:8000000}
+};
+const TR = 800; // transition length in ms (overlap between two images)
+const TRANSITIONS = ['fade','slideleft','slideup','zoom','wipe'];
+const combinedOutputs = {}; // quality -> {url, size}
+
+
+function compose(out, A, B, type, p){
+  const w = out.width, h = out.height, c = out.getContext('2d');
+  const e = p < .5 ? 2*p*p : 1 - Math.pow(-2*p+2, 2)/2; // ease in-out
+  c.globalAlpha = 1; c.fillStyle = '#000'; c.fillRect(0,0,w,h);
+  switch(type){
+    case 'fade':
+      c.drawImage(A,0,0,w,h); c.globalAlpha = e; c.drawImage(B,0,0,w,h); break;
+    case 'slideleft':
+      c.drawImage(A,-e*w,0,w,h); c.drawImage(B,(1-e)*w,0,w,h); break;
+    case 'slideup':
+      c.drawImage(A,0,-e*h,w,h); c.drawImage(B,0,(1-e)*h,w,h); break;
+    case 'zoom': {
+      const s1 = 1+e*0.3, s2 = 0.7+0.3*e;
+      c.globalAlpha = 1-e; c.drawImage(A,(w-w*s1)/2,(h-h*s1)/2,w*s1,h*s1);
+      c.globalAlpha = e;   c.drawImage(B,(w-w*s2)/2,(h-h*s2)/2,w*s2,h*s2); break; }
+    case 'wipe':
+      c.drawImage(A,0,0,w,h);
+      c.save(); c.beginPath(); c.rect(0,0,e*w,h); c.clip(); c.drawImage(B,0,0,w,h); c.restore(); break;
+  }
+  c.globalAlpha = 1;
+}
+
+function renderCombinedResult(){
+  const keys = Object.keys(combinedOutputs);
+  const last = combinedOutputs.last;
+  let html = '';
+  if(last) html += `<video src="${last.url}" controls></video>`;
+  html += '<div class="dl-list">';
+  keys.filter(k => k !== 'last').forEach(k => {
+    const o = combinedOutputs[k];
+    html += `<a href="${o.url}" download="combined-video-${k}p.${FMT.ext}">⬇ Download ${k}p .${FMT.ext} (${(o.size/1048576).toFixed(1)} MB)</a>`;
+  });
+  html += '</div>';
+  $('#cResult').innerHTML = html;
+}
+
+async function createCombined(){
+  const st = $('#cStatus'), btn = $('#createCombined');
+  if(!items.length){ st.textContent = '⚠ Please upload images first.'; return; }
+  btn.disabled = true;
+  if(!(await ensureImages(items, m => st.textContent = m))){ btn.disabled = false; return; }
+
+  await Promise.all(items.map(i => loadFont(i.font)));
+  const qKey = $('#cQuality').value, q = QUALITY[qKey], tsel = $('#cTrans').value;
+  const n = items.length;
+  const durs = items.map(durOf), starts = []; let acc = 0;
+  durs.forEach(d => { starts.push(acc); acc += d - TR; });
+  const total = acc + TR;
+  const trTypes = items.map((_, i) => tsel === 'mix' ? TRANSITIONS[(i-1+TRANSITIONS.length) % TRANSITIONS.length] : tsel);
+
+  const out = document.createElement('canvas'); out.width = q.w; out.height = q.h;
+  const oc = out.getContext('2d');
+  const sA = document.createElement('canvas'), sB = document.createElement('canvas');
+  sA.width = sB.width = W; sA.height = sB.height = H;
+  const cA = sA.getContext('2d'), cB = sB.getContext('2d');
+
+  // audio: typewriter sounds for every slide
+  const ac = new (window.AudioContext || window.webkitAudioContext)(); await ac.resume();
+  const dest = ac.createMediaStreamDestination();
+  const startAt = ac.currentTime + 0.2;
+  items.forEach((it, i) => scheduleSound(ac, dest, startAt + starts[i]/1000, it));
+
+  const stream = new MediaStream([...out.captureStream(30).getVideoTracks(), ...dest.stream.getAudioTracks()]);
+  const rec = new MediaRecorder(stream, Object.assign(FMT.mime ? {mimeType:FMT.mime} : {}, {videoBitsPerSecond:q.bps, audioBitsPerSecond:128000}));
+  const chunks = [];
+  rec.ondataavailable = e => e.data.size && chunks.push(e.data);
+
+  const slide = (ctx, it, local) => drawFrame(ctx, it, Math.max(0, local));
+
+  slide(cA, items[0], 0); oc.drawImage(sA,0,0,q.w,q.h);
+  rec.start();
+  const t0 = performance.now();
+  await new Promise(resolve => {
+    (function loop(){
+      const t = performance.now() - t0, tt = Math.min(t, total-1);
+      let i = n-1; while(i > 0 && starts[i] > tt) i--;
+      const local = tt - starts[i];
+      if(i > 0 && local < TR){
+        slide(cA, items[i-1], tt - starts[i-1]);
+        slide(cB, items[i], local);
+        compose(out, sA, sB, trTypes[i], local/TR);
+      } else {
+        slide(cA, items[i], local);
+        oc.globalAlpha = 1; oc.drawImage(sA,0,0,q.w,q.h);
+      }
+      st.textContent = `🎬 Creating ${qKey}p video… ${(Math.min(t,total)/1000).toFixed(1)}s / ${(total/1000).toFixed(1)}s (keep this tab open)`;
+      if(t < total) requestAnimationFrame(loop); else resolve();
+    })();
+  });
+  await new Promise(r => { rec.onstop = r; rec.stop(); });
+  ac.close();
+
+  const blob = new Blob(chunks, {type: FMT.ext==='mp4' ? 'video/mp4' : 'video/webm'});
+  const url = URL.createObjectURL(blob);
+  combinedOutputs[qKey] = {url, size:blob.size};
+  combinedOutputs.last = {url};
+  renderCombinedResult();
+  st.textContent = `✅ Combined video ready (${(total/1000).toFixed(1)}s, ${qKey}p). You can create another quality and download each one.`;
+  btn.disabled = false;
+}
+$('#createCombined').onclick = createCombined;
+
+/* ---------- Bulk actions ---------- */
+$('#createAll').onclick = async () => {
+  for(const it of items){ await createVideo(it); }   // one new video for every image
+};
+$('#clearAll').onclick = () => { items.length = 0; render(); };
+</script>
+</body>
+</html>
